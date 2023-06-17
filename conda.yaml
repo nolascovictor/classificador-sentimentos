@@ -1,0 +1,14 @@
+name: classificador-produtos
+channels:
+  - conda-forge
+dependencies:
+  - python=3.10.4
+  - pip
+  - pip:
+    - jupyter==1.0.0
+    - pandas==1.4.2
+    - nltk==3.7
+    - matplotlib==3.5.2
+    - seaborn==0.11.2
+    - scikit-learn==1.1.1
+    - mlflow==1.26.1

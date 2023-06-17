@@ -1,0 +1,10 @@
+name: classificador-produtos
+
+conda_env: conda.yaml
+
+entry_points:
+  main:
+    parameters:
+      test_size: {type: float, default: 0.2}
+      include_names: {type: string, default: 'sim'}
+    command: "python train.py {test_size} {include_names}"
