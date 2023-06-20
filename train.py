@@ -15,13 +15,13 @@ import spacy
 import swifter
 
 # Esta função tenta registrar o experimento no MLflow
-def tentar_registrar_experimento(p_test_size, depth, accuracy, dataset, model):
+def tentar_registrar_experimento(p_test_size, depth, accuracy, model):
     with mlflow.start_run():
         mlflow.log_param("depth", depth)
         # Vamos registrar as métricas
         mlflow.log_metric("acuracia", accuracy)
         # E o dataset (deve ser um caminho para um arquivo)
-        mlflow.log_artifact(dataset)
+        # mlflow.log_artifact(dataset)
         # E o modelo treinado
         mlflow.sklearn.log_model(model, "modelo")
 
@@ -89,4 +89,4 @@ if __name__ == "__main__":
         print(f"Acurácia={accuracy}")
 
         # Terminamos o treinamento, vamos tentar fazer o registro
-        tentar_registrar_experimento(p_test_size, depth, accuracy, dataset, pipe)
+        tentar_registrar_experimento(p_test_size, depth, accuracy, pipe)
