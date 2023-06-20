@@ -1,0 +1,3 @@
+[ZoneTransfer]
+ZoneId=3
+HostUrl=https://objects.githubusercontent.com/github-production-release-asset-2e65be/84940268/883f8c37-1d7a-4c94-9142-5989f317f1b2?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAIWNJYAX4CSVEH53A%2F20230620%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20230620T041705Z&X-Amz-Expires=300&X-Amz-Signature=82fb0894f838d262a08ecf5bdf811e09b28d2f7b8c7a2259d57f94b4eb5ce613&X-Amz-SignedHeaders=host&actor_id=64096009&key_id=0&repo_id=84940268&response-content-disposition=attachment%3B%20filename%3Dpt_core_news_sm-3.5.0-py3-none-any.whl&response-content-type=application%2Foctet-stream

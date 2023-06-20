@@ -3,16 +3,19 @@ import sys
 import pandas as pd
 import nltk
 from nltk.corpus import stopwords
-from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.naive_bayes import MultinomialNB
+from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
+from sklearn.model_selection import RandomizedSearchCV
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.metrics import accuracy_score
 import mlflow
 from unidecode import unidecode
+import spacy
+import swifter
 
 # Esta função tenta registrar o experimento no MLflow
-def tentar_registrar_experimento(p_test_size, p_include_names, accuracy, dataset, model):
+def tentar_registrar_experimento(p_test_size, accuracy, dataset, model):
     with mlflow.start_run():
         # Vamos registrar as métricas
         mlflow.log_metric("acuracia", accuracy)
@@ -22,51 +25,54 @@ def tentar_registrar_experimento(p_test_size, p_include_names, accuracy, dataset
         mlflow.sklearn.log_model(model, "modelo")
 
 if __name__ == "__main__":
-    nltk.download('stopwords')
-
-    # temos dois parâmetros agora
     # p_test_size: percentual de casos de teste, entre 0 e 1. Default é 0.2
     p_test_size = float(sys.argv[1]) if len(sys.argv) > 1 else 0.2
-    # p_include_names: se nomes devem ser incluídos no treinamento ou não, apenas descrição. Valor deve ser sim ou não. Default é sim
-    p_include_names = sys.argv[2] if len(sys.argv) > 2 else 'sim'
-
+    
     print("Treinando classificador de modelos...")
     print(f"Tamanho de testes={p_test_size}")
-    print(f"Incluir nomes={p_include_names}")
 
-    dataset = 'produtos.csv'
+    dataset = 'imdb-reviews-pt-br.csv.gz'
 
-    products_data = pd.read_csv(dataset, delimiter=';', encoding='utf-8')
+    products_data = pd.read_csv(dataset, index_col=0)
+    
+    products_data["sentiment_int"] = products_data["sentiment"].map({"pos": 0, "neg": 1})
 
-    if p_include_names == 'sim':
-        # concatenando as colunas nome e descricao
-        products_data['informacao'] = products_data['nome'] + products_data['descricao']
-    else:
-        # apenas a descricao
-        products_data['informacao'] = products_data['descricao']
+    nlp = spacy.load('pt_core_news_sm')
+    
+    nltk.download('stopwords')
+    nltk.download('rslp')
 
-    # excluindo linhas com valor de informacao ou categoria NaN
-    products_data.dropna(subset=['informacao', 'categoria'], inplace=True)
-    products_data.drop(columns=['nome', 'descricao'], inplace=True)
+    stop_words = nltk.corpus.stopwords.words('portuguese')
 
-    stop_words=set(stopwords.words("portuguese"))
-    # transforma a string em caixa baixa e remove stopwords
-    products_data['sem_stopwords'] = products_data['informacao'].str.lower().apply(lambda x: ' '.join([unidecode(word) for word in x.split() if word not in (stop_words)]))
-    tokenizer = nltk.RegexpTokenizer(r"\w+")
-    products_data['tokens'] = products_data['sem_stopwords'].apply(tokenizer.tokenize) # aplica o regex tokenizer
-    products_data.drop(columns=['sem_stopwords','informacao'],inplace=True) # Exclui as colunas antigas
+    # determinando forma básica (lema) das palavras
+    def lemmatizer(text):
+        sent = []
+        doc = nlp(text)
+        for word in doc:
+            if word.pos_ == "VERB":
+                sent.append(word.lemma_)
+            else:
+                sent.append(word.orth_)
+        return " ".join(sent)
+    
+    products_data['text'] = products_data.text_pt.swifter.apply(str.lower)
+    products_data['text'] = products_data.text.swifter.apply(unidecode)
+    products_data['text'] = products_data.text.swifter.apply(lemmatizer)
 
-    products_data["strings"]= products_data["tokens"].str.join(" ") # reunindo cada elemento da lista
-    products_data.head()
-
-
-    X_train,X_test,y_train,y_test = train_test_split( # Separação dos dados para teste e treino
-        products_data["strings"], 
-        products_data["categoria"], 
-        test_size = p_test_size, 
-        random_state = 10
-    )
-    pipe = Pipeline([('vetorizador', CountVectorizer()), ("classificador", MultinomialNB())]) # novo
+    X_train, X_test, y_train, y_test = train_test_split(products_data['text'], 
+                                                        products_data["sentiment"], 
+                                                        test_size = p_test_size, 
+                                                        random_state = 42
+                                                        )
+    
+    pipe = Pipeline(steps=[('vetorizador', TfidfVectorizer(ngram_range=(2,2), 
+                                                       stop_words=stop_words,
+                                                       use_idf=True, norm='l2'
+                                                       )
+                                                       ), 
+                 ("cls", RandomForestClassifier(n_jobs=-1, random_state=42))
+                 ]
+                 )
 
     pipe.fit(X_train, y_train)
 
@@ -76,4 +82,4 @@ if __name__ == "__main__":
     print(f"Acurácia={accuracy}")
 
     # Terminamos o treinamento, vamos tentar fazer o registro
-    tentar_registrar_experimento(p_test_size, p_include_names, accuracy, dataset, pipe)
+    tentar_registrar_experimento(p_test_size, accuracy, dataset, pipe)
