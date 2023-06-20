@@ -17,6 +17,7 @@ import swifter
 # Esta função tenta registrar o experimento no MLflow
 def tentar_registrar_experimento(p_test_size, depth, accuracy, model):
     with mlflow.start_run():
+        mlflow.log_param("p_test_size", p_test_size)
         mlflow.log_param("depth", depth)
         # Vamos registrar as métricas
         mlflow.log_metric("acuracia", accuracy)
