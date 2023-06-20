@@ -15,8 +15,9 @@ import spacy
 import swifter
 
 # Esta função tenta registrar o experimento no MLflow
-def tentar_registrar_experimento(p_test_size, accuracy, dataset, model):
+def tentar_registrar_experimento(p_test_size, depth, accuracy, dataset, model):
     with mlflow.start_run():
+        mlflow.log_param("depth", depth)
         # Vamos registrar as métricas
         mlflow.log_metric("acuracia", accuracy)
         # E o dataset (deve ser um caminho para um arquivo)
@@ -27,9 +28,11 @@ def tentar_registrar_experimento(p_test_size, accuracy, dataset, model):
 if __name__ == "__main__":
     # p_test_size: percentual de casos de teste, entre 0 e 1. Default é 0.2
     p_test_size = float(sys.argv[1]) if len(sys.argv) > 1 else 0.2
-    
+    depth = int(sys.argv[2]) if len(sys.argv) > 2 else 3
+
     print("Treinando classificador de modelos...")
     print(f"Tamanho de testes={p_test_size}")
+    print(f"depth={depth}")
 
     dataset = 'imdb-reviews-pt-br.csv.gz'
 
@@ -57,7 +60,7 @@ if __name__ == "__main__":
     
     products_data['text'] = products_data.text_pt.swifter.apply(str.lower)
     products_data['text'] = products_data.text.swifter.apply(unidecode)
-    products_data['text'] = products_data.text.swifter.apply(lemmatizer)
+    # products_data['text'] = products_data.text.swifter.apply(lemmatizer)
 
     X_train, X_test, y_train, y_test = train_test_split(products_data['text'], 
                                                         products_data["sentiment"], 
@@ -70,7 +73,10 @@ if __name__ == "__main__":
                                                        use_idf=True, norm='l2'
                                                        )
                                                        ), 
-                 ("cls", RandomForestClassifier(n_jobs=-1, random_state=42))
+                 ("cls", RandomForestClassifier(n_jobs=-1, 
+                                                max_depth=depth, 
+                                                random_state=42)
+                                                )
                  ]
                  )
 
@@ -82,4 +88,4 @@ if __name__ == "__main__":
     print(f"Acurácia={accuracy}")
 
     # Terminamos o treinamento, vamos tentar fazer o registro
-    tentar_registrar_experimento(p_test_size, accuracy, dataset, pipe)
+    tentar_registrar_experimento(p_test_size, depth, accuracy, dataset, pipe)

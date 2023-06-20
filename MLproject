@@ -6,4 +6,5 @@ entry_points:
   main:
     parameters:
       test_size: {type: float, default: 0.2}
-    command: "python train.py {test_size}"
+      depth: {type: int, default: 3}
+    command: "python train.py {test_size} {depth}"
