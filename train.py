@@ -28,11 +28,10 @@ def tentar_registrar_experimento(p_test_size, depth, accuracy, dataset, model):
 if __name__ == "__main__":
     # p_test_size: percentual de casos de teste, entre 0 e 1. Default é 0.2
     p_test_size = float(sys.argv[1]) if len(sys.argv) > 1 else 0.2
-    depth = int(sys.argv[2]) if len(sys.argv) > 2 else 3
+    # depth = int(sys.argv[2]) if len(sys.argv) > 2 else 3
 
     print("Treinando classificador de modelos...")
     print(f"Tamanho de testes={p_test_size}")
-    print(f"depth={depth}")
 
     dataset = 'imdb-reviews-pt-br.csv.gz'
 
@@ -68,24 +67,26 @@ if __name__ == "__main__":
                                                         random_state = 42
                                                         )
     
-    pipe = Pipeline(steps=[('vetorizador', TfidfVectorizer(ngram_range=(2,2), 
-                                                       stop_words=stop_words,
-                                                       use_idf=True, norm='l2'
-                                                       )
-                                                       ), 
-                 ("cls", RandomForestClassifier(n_jobs=-1, 
-                                                max_depth=depth, 
-                                                random_state=42)
-                                                )
-                 ]
-                 )
+    for depth in [3, 5, 7, 9, 13, 15]:
+        print(f"depth={depth}")
+        pipe = Pipeline(steps=[('vetorizador', TfidfVectorizer(ngram_range=(2,2), 
+                                                        stop_words=stop_words,
+                                                        use_idf=True, norm='l2'
+                                                        )
+                                                        ), 
+                    ("cls", RandomForestClassifier(n_jobs=-1, 
+                                                    max_depth=depth, 
+                                                    random_state=42)
+                                                    )
+                    ]
+                    )
 
-    pipe.fit(X_train, y_train)
+        pipe.fit(X_train, y_train)
 
-    y_prediction = pipe.predict(X_test)
-    accuracy = accuracy_score(y_prediction, y_test)
+        y_prediction = pipe.predict(X_test)
+        accuracy = accuracy_score(y_prediction, y_test)
 
-    print(f"Acurácia={accuracy}")
+        print(f"Acurácia={accuracy}")
 
-    # Terminamos o treinamento, vamos tentar fazer o registro
-    tentar_registrar_experimento(p_test_size, depth, accuracy, dataset, pipe)
+        # Terminamos o treinamento, vamos tentar fazer o registro
+        tentar_registrar_experimento(p_test_size, depth, accuracy, dataset, pipe)
