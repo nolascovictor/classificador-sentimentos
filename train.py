@@ -9,6 +9,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.metrics import accuracy_score
 import mlflow
+from unidecode import unidecode
 
 # Esta função tenta registrar o experimento no MLflow
 def tentar_registrar_experimento(p_test_size, p_include_names, accuracy, dataset, model):
@@ -50,7 +51,7 @@ if __name__ == "__main__":
 
     stop_words=set(stopwords.words("portuguese"))
     # transforma a string em caixa baixa e remove stopwords
-    products_data['sem_stopwords'] = products_data['informacao'].str.lower().apply(lambda x: ' '.join([word for word in x.split() if word not in (stop_words)]))
+    products_data['sem_stopwords'] = products_data['informacao'].str.lower().apply(lambda x: ' '.join([unidecode(word) for word in x.split() if word not in (stop_words)]))
     tokenizer = nltk.RegexpTokenizer(r"\w+")
     products_data['tokens'] = products_data['sem_stopwords'].apply(tokenizer.tokenize) # aplica o regex tokenizer
     products_data.drop(columns=['sem_stopwords','informacao'],inplace=True) # Exclui as colunas antigas
