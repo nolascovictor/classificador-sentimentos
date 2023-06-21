@@ -25,7 +25,8 @@ def tentar_registrar_experimento(p_test_size, depth, accuracy, model):
         # mlflow.log_artifact(dataset)
         # E o modelo treinado
         mlflow.sklearn.log_model(model, "modelo")
-
+        mlflow.end_run()
+        
 if __name__ == "__main__":
     # p_test_size: percentual de casos de teste, entre 0 e 1. Default é 0.2
     p_test_size = float(sys.argv[1]) if len(sys.argv) > 1 else 0.2
